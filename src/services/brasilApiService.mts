@@ -89,15 +89,9 @@ async function apiBrasilCep(cep: string): Promise<RespostaValidacao> {
 
 async function openStreetMap(cidade: string, uf: string, povoado?: string): Promise<RespostaValidacao> {
   
-  const sanitize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-
-  const c = sanitize(cidade);
-  const u = sanitize(uf);
-  const p = povoado ? sanitize(povoado) : "";
-
-  const localQuery = p 
-    ? `${p}, ${c}, ${u}, brasil` 
-    : `${c}, ${u}, brasil`;
+  const localQuery = povoado 
+    ? `${povoado}, ${cidade}, ${uf}, brasil` 
+    : `${cidade}, ${uf}, brasil`;
 
   const query = encodeURIComponent(localQuery);
   const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`;
