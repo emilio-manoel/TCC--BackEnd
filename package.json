@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx --watch src/server.mts",
     "build": "tsc",
-    "start": "node dist/server.mjs"
+    "start": "node ./dist/server.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",
