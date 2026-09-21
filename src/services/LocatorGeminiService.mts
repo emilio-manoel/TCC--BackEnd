@@ -64,11 +64,16 @@ export const extrairDadosDoacao = async (
     }
 
     // Valida a localização obtida pela IA através do checkExistingCEP
+     const sanitize = (str: string | null ) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const cep = dadosExtraidos.cep ? sanitize(dadosExtraidos.cep) : null;
+    const c = sanitize(dadosExtraidos.cidade);
+    const u = sanitize(dadosExtraidos.uf);
+    const p = dadosExtraidos.povoado ? sanitize(dadosExtraidos.povoado) : "";
     const resultadoLocal = await checkExistingCEP(
-      dadosExtraidos.cep,
-      dadosExtraidos.cidade,
-      dadosExtraidos.uf,
-      dadosExtraidos.povoado,
+      cep,
+      c,
+      u,
+      p,
     );
 
     if (!resultadoLocal.existe) {
