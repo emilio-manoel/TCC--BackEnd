@@ -4,12 +4,16 @@ import "./config/database.mjs";
 import ongRoute from "./routes/ongRoutes.mjs";
 import adminRoute from "./routes/adminRoutes.mjs";
 import doadorRoute from "./routes/doadorRoutes.mjs";
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './utils/swagger.js';
 
 const app = express();
 
 app.use(corsConfig);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/ong", ongRoute);
 app.use("/admin", adminRoute);

@@ -1,6 +1,7 @@
 import Ong from '../models/ONG.mjs';
 import Necessidade from '../models/Necessidade.mjs';
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 
 export const getPendingOngs = async ( _req:Request, res: Response) => {
   try {
@@ -63,3 +64,30 @@ export const deleteRejectedOngs = async (_req: Request, res: Response): Promise<
     res.status(500).json({ message });
   }
 };
+
+
+const JWT_SECRET = process.env.JWT_SECRET || 'chave_fallback_secreta';
+
+export async function loginAdmin(req: Request, res: Response) {
+  const { email, senha } = req.body;
+
+  // Validação simples (pode comparar com o banco ou com o .env)
+  const adminEmail = process.env.ADMIN_USER 
+  const adminSenha = process.env.ADMIN_PASS 
+
+  if (email !== adminEmail || senha !== adminSenha) {
+    return res.status(401).json({ error: 'E-mail ou senha incorretos' });
+  }
+
+  // Gera o token válido por 1 dia (24h)
+  const token = jwt.sign(
+    { email, role: 'admin' }, 
+    JWT_SECRET, 
+    { expiresIn: '1d' }
+  );
+
+  return res.json({
+    message: 'Login realizado com sucesso',
+    token,
+  });
+}
