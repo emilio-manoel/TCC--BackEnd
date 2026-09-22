@@ -20,7 +20,13 @@ app.use("/admin", adminRoute);
 app.use("/doador", doadorRoute);
 
 const PORT = Number(process.env.PORT) || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+const HOST = '0.0.0.0'
+
+app.listen(PORT, HOST, () => {
+    console.log(`Servidor rodando em http://${HOST}:${PORT}`)
+   console.log(`Documentação Swagger em http://${HOST}:${PORT}/docs`);
+})
+    ;
 
 
 export default app;
