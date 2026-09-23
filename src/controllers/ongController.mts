@@ -1,7 +1,8 @@
 import Ong from "../models/ONG.mjs";
 import Necessidade from "../models/Necessidade.mjs";
 import { Request, Response } from "express";
-import type { CreateONGEnviado } from "../types/typeCreateOng.mjs";
+import type { CreateONGEnviado} from "../types/typeCreateOng.mjs";
+
 
 
 export const createOng = async (req: Request, res: Response): Promise<void> => {
@@ -20,19 +21,23 @@ export const createOng = async (req: Request, res: Response): Promise<void> => {
     const novaOng = new Ong(data);
     await novaOng.save();
 
-    // Se houver necessidades no body, salvá-las na nova coleção
-   if (data.necessidades && Array.isArray(data.necessidades)) {
-  const necessidadesDocs = data.necessidades.slice(1).map((nec: any) => ({
-    ong: novaOng._id,
-    item: nec.item,
-    categoria: nec.categoria,
-    urgencia: nec.urgencia || "media",
-  }));
+    // Se houver necessidades no body, salvá-las na nova coleção (ignorando itens vazios)
+    const listaNecessidades = data.necessidades || (data as any).necessidade;
+    if (listaNecessidades && Array.isArray(listaNecessidades)) {
+      const necessidadesDocs = listaNecessidades
+        .filter((nec: any) => nec && typeof nec.item === "string" && nec.item.trim().length > 0)
+        .map((nec: any) => ({
+          ong: novaOng._id,
+          item: nec.item.trim(),
+          categoria: nec.categoria ? String(nec.categoria).trim() : undefined,
+          urgencia: nec.urgencia || "media",
+          status_aprovacao: "pendente",
+        }));
 
-  if (necessidadesDocs.length > 0) {
-    await Necessidade.insertMany(necessidadesDocs);
-  }
-}
+      if (necessidadesDocs.length > 0) {
+        await Necessidade.insertMany(necessidadesDocs);
+      }
+    }
 
     res.status(201).json({
       message: "ONG cadastrada com sucesso. Aguardando aprovação.",

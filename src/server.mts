@@ -26,7 +26,7 @@ app.listen(PORT, HOST, () => {
     console.log(`Servidor rodando em http://${HOST}:${PORT}`)
    console.log(`Documentação Swagger em http://${HOST}:${PORT}/docs`);
 })
-    ;
+    
 
 
 export default app;
