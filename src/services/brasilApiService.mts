@@ -32,22 +32,38 @@ export async function checkExistingCEP(
   povoado?: string | null,
 ) {
   if (cep) {
-    const resultadoCep = await apiBrasilCep(cep);
-    if (resultadoCep.existe) {
-      let lat: number | undefined;
-      let lng: number | undefined;
-      if (resultadoCep.dados?.location?.coordinates) {
-        lng = parseFloat(resultadoCep.dados.location.coordinates.longitude);
-        lat = parseFloat(resultadoCep.dados.location.coordinates.latitude);
-      }
-      if (!lat || !lng) {
-        const mapRes = await openStreetMap(cep, "");
-        if (mapRes.existe && mapRes.dados?.length > 0) {
-          lat = parseFloat(mapRes.dados[0].lat);
-          lng = parseFloat(mapRes.dados[0].lon);
+    const cepClean = cep.replace(/[^\d]+/g, "");
+    if (cepClean) {
+      const resultadoCep = await apiBrasilCep(cepClean);
+      if (resultadoCep.existe) {
+        let lat: number | undefined;
+        let lng: number | undefined;
+        if (resultadoCep.dados?.location?.coordinates) {
+          lng = parseFloat(resultadoCep.dados.location.coordinates.longitude);
+          lat = parseFloat(resultadoCep.dados.location.coordinates.latitude);
         }
+        if (!lat || !lng) {
+          const citySearch = resultadoCep.dados?.city || cidade;
+          const stateSearch = resultadoCep.dados?.state || uf;
+          if (citySearch && stateSearch) {
+            const mapRes = await openStreetMap(citySearch, stateSearch);
+            if (mapRes.existe && mapRes.dados?.length > 0) {
+              lat = parseFloat(mapRes.dados[0].lat);
+              lng = parseFloat(mapRes.dados[0].lon);
+            }
+          }
+        }
+        return { 
+          existe: true, 
+          lat, 
+          lng, 
+          dados: {
+            ...resultadoCep.dados,
+            cidade: resultadoCep.dados?.city,
+            uf: resultadoCep.dados?.state
+          } 
+        };
       }
-      return { existe: true, lat, lng, dados: resultadoCep.dados };
     }
   }
 
@@ -77,7 +93,8 @@ export async function checkExistingCEP(
 
 async function apiBrasilCep(cep: string): Promise<RespostaValidacao> {
   try {
-    const resposta = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
+    const cepClean = cep.replace(/[^\d]+/g, "");
+    const resposta = await fetch(`https://brasilapi.com.br/api/cep/v2/${cepClean}`);
     if (!resposta.ok) return { existe: false };
 
     const dados = await resposta.json();
