@@ -31,7 +31,7 @@ export const extrairDadosDoacao = async (
 ): Promise<void> => {
 
   try {
-    const inicioDaExtracaoDeDados = performance.now();
+    
 
     const historico: Mensagem[] = Array.isArray(req.body)
       ? req.body
@@ -65,12 +65,9 @@ export const extrairDadosDoacao = async (
       return;
     }
     
-    const FIMDaExtracaoDeDados = performance.now()
+   
 
-    // Valida a localização obtida pela IA através do checkExistingCEP
-    const inicioDaValidacaoDeLocalizacao = performance.now()
-    
-    const resultadoLocal = await checkExistingCEP(
+        const resultadoLocal = await checkExistingCEP(
       dadosExtraidos.cep,
       dadosExtraidos.cidade,
       dadosExtraidos.uf,
@@ -86,17 +83,10 @@ export const extrairDadosDoacao = async (
       return;
     }
     
-    const FimDaValidacaoDeLocalizacao = performance.now()
-
-
     // Guarda os dados extraídos e as coordenadas para a próxima rota (getNearbyOngs)
     res.locals.dadosExtraidos = dadosExtraidos;
     res.locals.lat = resultadoLocal.lat;
     res.locals.lng = resultadoLocal.lng;
-
-
-    console.log(`Tempo de execucao da extração de dados: ${(FIMDaExtracaoDeDados - inicioDaExtracaoDeDados)}ms`)
-    console.log(`Tempo de verificação de localização: ${(FimDaValidacaoDeLocalizacao - inicioDaValidacaoDeLocalizacao)}ms`)
 
     next();
   } catch (error) {
