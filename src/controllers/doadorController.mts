@@ -53,6 +53,8 @@ export const getNearbyOngs = async (req: Request, res: Response): Promise<void> 
   : undefined;
     
     const FimDaRespostaGeradaPelaIA = performance.now()
+    console.log(`Tempo de execucao da busca por ONGs proximas: ${(FimDaBuscaPorONGsProximas - inicioDaBuscaPorONGsProximas)}ms`)
+
     console.log(`Tempo de execucao da resposta gerada pela IA: ${(FimDaRespostaGeradaPelaIA - inicioDaRespostaGeradaPelaIA)}ms`)
 
     // Mapeia as ONGs para expor explicitamente latitude e longitude para o Leaflet no front-end
@@ -65,9 +67,6 @@ export const getNearbyOngs = async (req: Request, res: Response): Promise<void> 
       };
     });
 
-
-    console.log(`Tempo de execucao da busca por ONGs proximas: ${(FimDaBuscaPorONGsProximas - inicioDaBuscaPorONGsProximas)}ms`)
-    console.log(`Tempo de geração da resposta final por IA de execucao: ${(FimDaRespostaGeradaPelaIA - inicioDaRespostaGeradaPelaIA)}ms`)
     console.log("------------------------------------------------")
 
     res.status(200).json({
