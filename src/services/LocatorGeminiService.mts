@@ -31,6 +31,8 @@ export const extrairDadosDoacao = async (
 ): Promise<void> => {
 
   try {
+    const inicioDaExtracaoDeDados = performance.now();
+
     const historico: Mensagem[] = Array.isArray(req.body)
       ? req.body
       : Array.isArray(req.body?.historico)
@@ -62,28 +64,39 @@ export const extrairDadosDoacao = async (
       res.status(200).json(dadosExtraidos);
       return;
     }
+    
+    const FIMDaExtracaoDeDados = performance.now()
 
     // Valida a localização obtida pela IA através do checkExistingCEP
+    const inicioDaValidacaoDeLocalizacao = performance.now()
+    
     const resultadoLocal = await checkExistingCEP(
       dadosExtraidos.cep,
       dadosExtraidos.cidade,
       dadosExtraidos.uf,
       dadosExtraidos.povoado,
     );
-
+    
     if (!resultadoLocal.existe) {
       res.status(200).json({
         status: "incompleto",
         pergunta:
-          "Não consegui localizar o endereço informado. Pode confirmar seu CEP ou cidade/estado?",
+        "Não consegui localizar o endereço informado. Pode confirmar seu CEP ou cidade/estado?",
       });
       return;
     }
+    
+    const FimDaValidacaoDeLocalizacao = performance.now()
+
 
     // Guarda os dados extraídos e as coordenadas para a próxima rota (getNearbyOngs)
     res.locals.dadosExtraidos = dadosExtraidos;
     res.locals.lat = resultadoLocal.lat;
     res.locals.lng = resultadoLocal.lng;
+
+
+    console.log(`Tempo de execucao da extração de dados: ${(FIMDaExtracaoDeDados - inicioDaExtracaoDeDados)}ms`)
+    console.log(`Tempo de verificação de localização: ${(FimDaValidacaoDeLocalizacao - inicioDaValidacaoDeLocalizacao)}ms`)
 
     next();
   } catch (error) {

@@ -20,13 +20,12 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   const token = parts[1];
 
   try {
-    // Valida se o token é autêntico e não expirou
     const decoded = jwt.verify(token, JWT_SECRET);
     
     // Salva os dados do usuário autenticado na requisição
     (req as any).user = decoded;
 
-    return next(); // Token válido: permite avançar para a rota admin
+    return next(); 
   } catch (err) {
     return res.status(401).json({ error: 'Token inválido ou expirado' });
   }
