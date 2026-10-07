@@ -20,7 +20,7 @@ app.use("/admin", adminRoute);
 app.use("/doador", doadorRoute);
 
 const PORT = Number(process.env.PORT) || 3000;
-const HOST = '127.0.0.1'
+const HOST = '0.0.0.0'
 
 app.listen(PORT, HOST, () => {
     console.log(`Servidor rodando em http://${HOST}:${PORT}`)
