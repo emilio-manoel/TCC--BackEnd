@@ -4,8 +4,8 @@ import { PROMPT_EXTRACAO } from "../prompts/obterLocal.mjs";
 import { checkExistingCEP } from "./brasilApiService.mjs";
 
 interface Mensagem {
-  role: "user" | "model";
-  texto: string;
+    sender: "user" | "bot";
+    content: string;
 }
 
 interface ItemDoacao {
@@ -42,8 +42,8 @@ export const extrairDadosDoacao = async (
     const resposta = await geminiClient.models.generateContent({
       model: "gemini-3.5-flash-lite",
       contents: historico.map((m) => ({
-        role: m.role,
-        parts: [{ text: m.texto }],
+        sender: m.sender,
+        parts: [{ text: m.content}],
       })),
       config: {
         systemInstruction: PROMPT_EXTRACAO,
