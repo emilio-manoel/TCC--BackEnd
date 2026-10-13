@@ -29,9 +29,9 @@ Se o array "itens" estiver vazio, significa que o usuário informou apenas a loc
 ### FORMATO DE SAÍDA OBRIGATÓRIO
 Você deve retornar ESTRITAMENTE um objeto JSON válido, sem formatação markdown sem \`\`\`json contendo as seguintes chaves:
 {
-  "sucesso": true ou false,
-  "mensagem_chat": "Texto empático formatado em markdown simulando a conversa com o doador, justificando a escolha baseada na área de atuação.",
-  "ong_selecionada": {
+  "success": true ou false,
+  "messageChat": "Texto empático formatado em markdown simulando a conversa com o doador, justificando a escolha baseada na área de atuação.",
+  "ongSelected": {
     "id": "id da ong escolhida (se houver)",
     "nome": "Razão social amigável",
     "endereco_completo": "Endereço completo para o mapa"

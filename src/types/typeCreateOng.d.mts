@@ -1,4 +1,4 @@
-import { IONG } from "../models/ONG.mjs";
+import { IONG } from "../models/ONG.mts";
 
 export interface CreateONGRecebido {
   cnpj: string;

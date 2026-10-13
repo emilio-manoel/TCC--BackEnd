@@ -14,7 +14,7 @@ interface ItemDoacao {
 }
 
 type ResultadoExtracao =
-  | { status: "incompleto"; pergunta: string }
+  | { status: "incompleto"; question: string }
   | {
       status: "completo";
       cep: string | null;
@@ -77,7 +77,7 @@ export const extrairDadosDoacao = async (
     if (!resultadoLocal.existe) {
       res.status(200).json({
         status: "incompleto",
-        pergunta:
+        question:
         "Não consegui localizar o endereço informado. Pode confirmar seu CEP ou cidade/estado?",
       });
       return;
@@ -93,7 +93,7 @@ export const extrairDadosDoacao = async (
     console.error("Erro no processamento da doação:", error);
     res.status(200).json({
       status: "incompleto",
-      pergunta: "Desculpa, não entendi direito, tente novamente, começando me passando o seu CEP ou cidade/estado, para fazer o match.",
+      question: "Desculpa, não entendi direito, tente novamente, começando me passando o seu CEP ou cidade/estado, para fazer o match.",
     });
   }
 };

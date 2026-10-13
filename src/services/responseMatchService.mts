@@ -1,10 +1,10 @@
 import { geminiClient } from "../config/gemini.mjs";
 import { RESPOSTA_GERAL } from "../prompts/respostaGeral.mjs";
 
-export interface RespostaMatch {
-  sucesso: boolean;
-  mensagem_chat: string;
-  ong_selecionada?: {
+export interface ResponseMatch {
+  success: boolean;
+  messageChat: string;
+  ongSelected?: {
     id?: string;
     nome?: string;
     endereco_completo?: string;
@@ -13,8 +13,8 @@ export interface RespostaMatch {
 
 export const gerarRespostaMatch = async (
   dadosExtraidos: any,
-  ongs: any[]
-): Promise<RespostaMatch> => {
+  ongs: any[],
+): Promise<ResponseMatch> => {
   try {
     const inputContent = JSON.stringify({
       dadosExtraidos,
@@ -55,8 +55,9 @@ export const gerarRespostaMatch = async (
   } catch (error) {
     console.error("Erro ao gerar resposta de Match com Gemini:", error);
     return {
-      sucesso: false,
-      mensagem_chat: "Encontrei estas ONGs próximas de você! Dá uma olhada na lista e no mapa.",
+      success: false,
+      messageChat:
+        "Encontrei estas ONGs próximas de você! Dá uma olhada na lista e no mapa.",
     };
   }
 };
