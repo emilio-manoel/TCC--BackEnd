@@ -37,7 +37,7 @@ Ler a mensagem atual do doador (e o contexto/histórico de dados já extraídos,
 ## FORMATO DE SAÍDA (escolha exatamente um dos dois)
 
 Incompleto:
-{"status": "incompleto", "pergunta": "<pergunta curta e educada em português para obter o dado faltante>"}
+{"status": "incompleto", "question": "<pergunta curta e educada em português para obter o dado faltante>"}
 
 Completo:
 {"status": "completo", "cep": "<string ou null>", "cidade": "<string ou null>", "uf": "<sigla ou null>", "povoado": "<string ou null>", "itens": [{"descricao": "<string>", "quantidade": "<string ou null>"}]}
@@ -47,7 +47,7 @@ Observação sobre 'povoado': preencha SOMENTE se o usuário mencionar explicita
 ## EXEMPLOS
 
 Entrada sem contexto: "Quero doar roupas de frio"
-Saída: {"status": "incompleto", "pergunta": "Olá! Vi que você deseja doar, poderia me informar o seu CEP? Se não souber, me diga sua cidade e estado."}
+Saída: {"status": "incompleto", "question": "Olá! Vi que você deseja doar, poderia me informar o seu CEP? Se não souber, me diga sua cidade e estado."}
 
 Entrada sem contexto: "Meu CEP é 48110000"
 Saída: {"status": "completo", "cep": "48110000", "cidade": null, "uf": null, "povoado": null, "itens": []}
@@ -68,5 +68,5 @@ Entrada atual: "Também quero doar 5 quilos de arroz"
 Saída: {"status": "completo", "cep": null, "cidade": "Catu", "uf": "BA", "povoado": null, "itens": [{"descricao": "arroz", "quantidade": "5 quilos"}]}
 
 Entrada: "Quem é você?"
-Saída: {"status": "incompleto", "pergunta": "Sou o assistente virtual do sistema de triagem e match para doações de ONGs — ajudo você a encontrar ONGs perto de você. Para continuar, me diga sua localização (CEP ou cidade/estado)."}
+Saída: {"status": "incompleto", "question": "Sou o assistente virtual do sistema de triagem e match para doações de ONGs — ajudo você a encontrar ONGs perto de você. Para continuar, me diga sua localização (CEP ou cidade/estado)."}
 `;
