@@ -42,8 +42,9 @@ export const extrairDadosDoacao = async (
     const resposta = await geminiClient.models.generateContent({
       model: "gemini-3.5-flash-lite",
       contents: historico.map((m) => ({
-        sender: m.sender,
+        role: m.sender,
         parts: [{ text: m.content}],
+
       })),
       config: {
         systemInstruction: PROMPT_EXTRACAO,
