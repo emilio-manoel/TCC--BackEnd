@@ -1,9 +1,9 @@
 import express from "express";
 import { createOng } from "../controllers/ongController.mjs";
-import { validaCriacaoOng } from "../middlewares/errorHandler.mjs";
+import { validateCreationOng } from "../middlewares/validateCreationOng.mjs";
 
 const ongRoute = express.Router();
 
-ongRoute.post("/", validaCriacaoOng, createOng);
+ongRoute.post("/", validateCreationOng, createOng);
 
 export default ongRoute;

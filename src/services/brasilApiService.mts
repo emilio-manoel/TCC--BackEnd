@@ -1,113 +1,64 @@
-interface RespostaValidacao {
-  existe: boolean;
-  dados?: any;
-}
+import { cnpj } from "cpf-cnpj-validator";
+import {
+  BrasilApiCNPJResponse,
+  BrasilApiCepV2Response,
+  NominatimSearchResult,
+  ValidationResult,
+  LocationCheckResult,
+} from "../types/checkExist.mjs";
 
-export async function checkExistingCNPJ(cnpj: string) {
-    
-   const cnpjClean = cnpj.replace(/[^\d]+/g, "");
+export async function checkExistingCNPJ(
+  Cnpj: string,
+): Promise<ValidationResult<BrasilApiCNPJResponse>> {
+  const cnpjClean = cnpj.strip(Cnpj);
+
+  if (!cnpjClean) return { exists: false };
 
   try {
     const resposta = await fetch(
       `https://brasilapi.com.br/api/cnpj/v1/${cnpjClean}`,
       {
         headers: {
-          'User-Agent': 'TCC-App-Validation'
-        }
-      }
+          "User-Agent": "TCC-App-Validation",
+        },
+      },
     );
-    if (!resposta.ok) return { existe: false };
 
-    const dados = await resposta.json();
-    return { existe: true, dados };
+    if (!resposta.ok) return { exists: false };
+
+    const data = (await resposta.json()) as BrasilApiCNPJResponse;
+    return { exists: true, data };
   } catch {
-    return { existe: false };
+    return { exists: false };
   }
 }
 
-export async function checkExistingCEP(
-  cep?: string | null,
-  cidade?: string | null,
-  uf?: string | null,
-  povoado?: string | null,
-) {
-  if (cep) {
-    const cepClean = cep.replace(/[^\d]+/g, "");
-    if (cepClean) {
-      const resultadoCep = await apiBrasilCep(cepClean);
-      if (resultadoCep.existe) {
-        let lat: number | undefined;
-        let lng: number | undefined;
-        if (resultadoCep.dados?.location?.coordinates) {
-          lng = parseFloat(resultadoCep.dados.location.coordinates.longitude);
-          lat = parseFloat(resultadoCep.dados.location.coordinates.latitude);
-        }
-        if (!lat || !lng) {
-          const citySearch = resultadoCep.dados?.city || cidade;
-          const stateSearch = resultadoCep.dados?.state || uf;
-          if (citySearch && stateSearch) {
-            const mapRes = await openStreetMap(citySearch, stateSearch);
-            if (mapRes.existe && mapRes.dados?.length > 0) {
-              lat = parseFloat(mapRes.dados[0].lat);
-              lng = parseFloat(mapRes.dados[0].lon);
-            }
-          }
-        }
-        return { 
-          existe: true, 
-          lat, 
-          lng, 
-          dados: {
-            ...resultadoCep.dados,
-            cidade: resultadoCep.dados?.city,
-            uf: resultadoCep.dados?.state
-          } 
-        };
-      }
-    }
-  }
-
-  if (cidade && uf) {
-    // Se o usuário informou um povoado/bairro/distrito, tenta a busca mais específica primeiro
-    if (povoado) {
-      const resultadoEspecifico = await openStreetMap(cidade, uf, povoado);
-      if (resultadoEspecifico.existe && resultadoEspecifico.dados?.length > 0) {
-        const item = resultadoEspecifico.dados[0];
-        const lat = parseFloat(item.lat);
-        const lng = parseFloat(item.lon);
-        return { existe: true, lat, lng, dados: resultadoEspecifico.dados };
-      }
-    }
-
-    // Fallback: busca pela cidade/UF apenas
-    const resultadoMap = await openStreetMap(cidade, uf);
-    if (resultadoMap.existe && resultadoMap.dados?.length > 0) {
-      const item = resultadoMap.dados[0];
-      const lat = parseFloat(item.lat);
-      const lng = parseFloat(item.lon);
-      return { existe: true, lat, lng, dados: resultadoMap.dados };
-    }
-  }
-  return { existe: false };
-}
-
-async function apiBrasilCep(cep: string): Promise<RespostaValidacao> {
+async function apiBrasilCep(
+  cep: string,
+): Promise<ValidationResult<BrasilApiCepV2Response>> {
   try {
     const cepClean = cep.replace(/[^\d]+/g, "");
-    const resposta = await fetch(`https://brasilapi.com.br/api/cep/v2/${cepClean}`);
-    if (!resposta.ok) return { existe: false };
+    if (!cepClean) return { exists: false };
 
-    const dados = await resposta.json();
-    return { existe: true, dados };
+    const response = await fetch(
+      `https://brasilapi.com.br/api/cep/v2/${cepClean}`,
+    );
+    if (!response.ok) return { exists: false };
+
+    const data = (await response.json()) as BrasilApiCepV2Response;
+    return { exists: true, data };
   } catch {
-    return { existe: false };
+    return { exists: false };
   }
 }
 
-async function openStreetMap(cidade: string, uf: string, povoado?: string): Promise<RespostaValidacao> {
-  
-  const localQuery = povoado 
-    ? `${povoado}, ${cidade}, ${uf}, brasil` 
+async function openStreetMap(
+  cidade: string,
+  uf: string,
+  povoado?: string,
+): Promise<ValidationResult<NominatimSearchResult[]>> {
+  const localQuery = povoado
+    ? `${povoado}, ${cidade}, ${uf}, brasil`
     : `${cidade}, ${uf}, brasil`;
 
   const query = encodeURIComponent(localQuery);
@@ -116,14 +67,84 @@ async function openStreetMap(cidade: string, uf: string, povoado?: string): Prom
   try {
     const resposta = await fetch(url, {
       headers: {
-        'User-Agent': 'TCC-App-Validation' // Identifica sua aplicação na API deles
-      }
+        "User-Agent": "TCC-App-Validation",
+      },
     });
-    if (!resposta.ok) return { existe: false };
 
-    const dados = await resposta.json();
-    return { existe: true, dados };
+    if (!resposta.ok) return { exists: false };
+
+    const data = (await resposta.json()) as NominatimSearchResult[];
+    return { exists: true, data };
   } catch {
-    return { existe: false };
+    return { exists: false };
   }
+}
+
+export async function checkExistingCEP(
+  cep?: string | null,
+  cidade?: string | null,
+  uf?: string | null,
+  povoado?: string | null,
+): Promise<LocationCheckResult> {
+  if (cep) {
+    const cepClean = cep.replace(/[^\d]+/g, "");
+    if (cepClean) {
+      const resultCep = await apiBrasilCep(cepClean);
+
+      if (resultCep.exists) {
+        let lat: number | undefined;
+        let lng: number | undefined;
+
+        if (resultCep.data.location?.coordinates) {
+          lng = parseFloat(resultCep.data.location.coordinates.longitude);
+          lat = parseFloat(resultCep.data.location.coordinates.latitude);
+        }
+
+        if (!lat || !lng) {
+          const citySearch = resultCep.data.city || cidade;
+          const stateSearch = resultCep.data.state || uf;
+
+          if (citySearch && stateSearch) {
+            const mapRes = await openStreetMap(citySearch, stateSearch);
+            if (mapRes.exists && mapRes.data.length > 0) {
+              lat = parseFloat(mapRes.data[0].lat);
+              lng = parseFloat(mapRes.data[0].lon);
+            }
+          }
+        }
+
+        return {
+          exists: true,
+          lat,
+          lng,
+        };
+      }
+    }
+  }
+
+  if (cidade && uf) {
+    if (povoado) {
+      const specificResult = await openStreetMap(cidade, uf, povoado);
+      if (specificResult.exists && specificResult.data.length > 0) {
+        const item = specificResult.data[0];
+        return {
+          exists: true,
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lon),
+        };
+      }
+    }
+
+    const resultMap = await openStreetMap(cidade, uf);
+    if (resultMap.exists && resultMap.data.length > 0) {
+      const item = resultMap.data[0];
+      return {
+        exists: true,
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+      };
+    }
+  }
+
+  return { exists: false };
 }

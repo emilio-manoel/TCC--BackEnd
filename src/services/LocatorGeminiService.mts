@@ -75,7 +75,7 @@ export const extrairDadosDoacao = async (
       dadosExtraidos.povoado,
     );
     
-    if (!resultadoLocal.existe) {
+    if (!resultadoLocal.exists) {
       res.status(200).json({
         status: "incompleto",
         question:

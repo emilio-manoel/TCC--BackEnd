@@ -1,7 +1,5 @@
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 
-dotenv.config();
 
 const dbUri = process.env.MONGODB_URI || "";
 

@@ -618,6 +618,11 @@ cors@^2.8.6:
     object-assign "^4"
     vary "^1"
 
+cpf-cnpj-validator@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/cpf-cnpj-validator/-/cpf-cnpj-validator-2.1.2.tgz#0f699085c1e280cbe2454e69bf1e50ff0122ca28"
+  integrity sha512-JhU4oUhZRugvDZvWBSsQQHNHbWcjc5VW4BlmaKfChm7ddMSh/Ixv2iHM0uFNx3hN3NYgfVgVNl5MbkjNr5tgyA==
+
 cross-spawn@^7.0.6:
   version "7.0.6"
   resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-7.0.6.tgz#8a58fe78f00dcd70c370451759dfbfaf03e8ee9f"

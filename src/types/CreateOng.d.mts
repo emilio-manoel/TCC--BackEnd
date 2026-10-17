@@ -1,13 +1,13 @@
 import { IONG } from "../models/ONG.mts";
 
-export interface CreateONGRecebido {
+export interface CreateONGReceived {
   cnpj: string;
   razao_social: string;
   natureza_juridica: string;
   situacao_cadastral: string;
   endereco_completo: string;
   cep: string;
-  descricao:string;
+  descricao: string;
   municipio: string;
   uf: string;
   areas_atuacao: string[];
@@ -23,6 +23,6 @@ interface Necessidade {
   urgencia: "baixa" | "media" | "alta";
 }
 
-export interface CreateONGEnviado extends IONG{
-    necessidades: Necessidade[];
+export interface CreateONGSent extends IONG {
+  necessidades: Necessidade[];
 }

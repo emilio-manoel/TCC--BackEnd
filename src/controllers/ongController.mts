@@ -1,15 +1,13 @@
 import Ong from "../models/ONG.mjs";
 import Necessidade from "../models/Necessidade.mjs";
 import { Request, Response } from "express";
-import type { CreateONGEnviado} from "../types/typeCreateOng.mjs";
-
-
+import type { CreateONGSent } from "../types/CreateOng.mjs";
 
 export const createOng = async (req: Request, res: Response): Promise<void> => {
   try {
-    const data:CreateONGEnviado = req.body;
-    
-    const { lat, lng } = res.locals.coordenadas;
+    const data: CreateONGSent = req.body;
+
+    const { lat, lng } = res.locals.coordinates;
     data.localizacao = { type: "Point", coordinates: [lng, lat] };
 
     // Garante que o status inicial seja pendente
@@ -25,7 +23,10 @@ export const createOng = async (req: Request, res: Response): Promise<void> => {
     const listaNecessidades = data.necessidades || (data as any).necessidade;
     if (listaNecessidades && Array.isArray(listaNecessidades)) {
       const necessidadesDocs = listaNecessidades
-        .filter((nec: any) => nec && typeof nec.item === "string" && nec.item.trim().length > 0)
+        .filter(
+          (nec: any) =>
+            nec && typeof nec.item === "string" && nec.item.trim().length > 0,
+        )
         .map((nec: any) => ({
           ong: novaOng._id,
           item: nec.item.trim(),
@@ -41,7 +42,6 @@ export const createOng = async (req: Request, res: Response): Promise<void> => {
 
     res.status(201).json({
       message: "ONG cadastrada com sucesso. Aguardando aprovação.",
-      ong: novaOng,
     });
   } catch (error: unknown) {
     const message =
