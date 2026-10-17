@@ -1,34 +1,32 @@
 import Ong from "../models/ONG.mjs";
 import Necessidade from "../models/Necessidade.mjs";
 import { Request, Response } from "express";
-import type { CreateONGSent } from "../types/CreateOng.mjs";
+import type { CreateONGSent, NecessidadeType } from "../types/CreateOng.mjs";
+import type { Coordinates } from "../types/checkExist.mjs";
+import { cnpj } from "cpf-cnpj-validator";
+const cnpjLibrary = cnpj;
 
 export const createOng = async (req: Request, res: Response): Promise<void> => {
   try {
     const data: CreateONGSent = req.body;
+    const { lat, lng } = res.locals.coordinates as Coordinates;
 
-    const { lat, lng } = res.locals.coordinates;
     data.localizacao = { type: "Point", coordinates: [lng, lat] };
-
-    // Garante que o status inicial seja pendente
     data.status_aprovacao = "pendente";
+    data.cnpj = cnpjLibrary.strip(data.cnpj);
 
-    // Limpa o CNPJ de caracteres especiais antes de salvar
-    data.cnpj = data.cnpj.replace(/[^\d]+/g, "");
+    const newOng = new Ong(data);
+    await newOng.save();
 
-    const novaOng = new Ong(data);
-    await novaOng.save();
-
-    // Se houver necessidades no body, salvá-las na nova coleção (ignorando itens vazios)
-    const listaNecessidades = data.necessidades || (data as any).necessidade;
-    if (listaNecessidades && Array.isArray(listaNecessidades)) {
-      const necessidadesDocs = listaNecessidades
+    const listNecessidades = data.necessidade
+    if (listNecessidades && Array.isArray(listNecessidades)) {
+      const necessidadesDocs = listNecessidades
         .filter(
-          (nec: any) =>
+          (nec: NecessidadeType) =>
             nec && typeof nec.item === "string" && nec.item.trim().length > 0,
         )
-        .map((nec: any) => ({
-          ong: novaOng._id,
+        .map((nec: NecessidadeType) => ({
+          ong: newOng._id,
           item: nec.item.trim(),
           categoria: nec.categoria ? String(nec.categoria).trim() : undefined,
           urgencia: nec.urgencia || "media",

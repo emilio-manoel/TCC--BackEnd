@@ -1,7 +1,8 @@
 import type { CreateONGReceived } from "./CreateOng.d.mts";
 
 export interface BrasilApiCNPJResponse {
-  codigo_natureza_juridica?: number;
+  codigo_natureza_juridica: number;
+  descricao_situacao_cadastral: string;
 }
 
 interface BrasilApiLocationCoordinates {
@@ -40,3 +41,8 @@ export type LocationCheckResult =
       lat?: undefined;
       lng?: undefined;
     };
+
+  export interface Coordinates {
+  lat: number;
+  lng: number;
+}

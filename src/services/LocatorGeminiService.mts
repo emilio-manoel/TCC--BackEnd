@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { geminiClient } from "../config/gemini.mjs";
 import { PROMPT_EXTRACAO } from "../prompts/obterLocal.mjs";
-import { checkExistingCEP } from "./brasilApiService.mjs";
+import { checkExistingCEP } from "./checkExistingCEP.mjs";
 
 interface Mensagem {
     sender: "user" | "bot";

@@ -1,47 +1,19 @@
-import { cnpj } from "cpf-cnpj-validator";
 import {
-  BrasilApiCNPJResponse,
   BrasilApiCepV2Response,
   NominatimSearchResult,
   ValidationResult,
   LocationCheckResult,
 } from "../types/checkExist.mjs";
 
-export async function checkExistingCNPJ(
-  Cnpj: string,
-): Promise<ValidationResult<BrasilApiCNPJResponse>> {
-  const cnpjClean = cnpj.strip(Cnpj);
-
-  if (!cnpjClean) return { exists: false };
-
-  try {
-    const resposta = await fetch(
-      `https://brasilapi.com.br/api/cnpj/v1/${cnpjClean}`,
-      {
-        headers: {
-          "User-Agent": "TCC-App-Validation",
-        },
-      },
-    );
-
-    if (!resposta.ok) return { exists: false };
-
-    const data = (await resposta.json()) as BrasilApiCNPJResponse;
-    return { exists: true, data };
-  } catch {
-    return { exists: false };
-  }
-}
 
 async function apiBrasilCep(
   cep: string,
 ): Promise<ValidationResult<BrasilApiCepV2Response>> {
   try {
-    const cepClean = cep.replace(/[^\d]+/g, "");
-    if (!cepClean) return { exists: false };
+    if (cep) return { exists: false };
 
     const response = await fetch(
-      `https://brasilapi.com.br/api/cep/v2/${cepClean}`,
+      `https://brasilapi.com.br/api/cep/v2/${cep}`,
     );
     if (!response.ok) return { exists: false };
 

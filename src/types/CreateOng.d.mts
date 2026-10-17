@@ -14,15 +14,15 @@ export interface CreateONGReceived {
   subareas_atuacao?: string[];
   numero_contato?: string[];
   redes_sociais?: string[];
-  necessidade?: Necessidade[];
+  necessidade?: NecessidadeType[];
 }
 
-interface Necessidade {
-  item?: string;
+export interface NecessidadeType {
+  item: string;
   categoria?: string;
   urgencia: "baixa" | "media" | "alta";
 }
 
 export interface CreateONGSent extends IONG {
-  necessidades: Necessidade[];
+  necessidade: NecessidadeType[];
 }

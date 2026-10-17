@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import {
-  checkExistingCNPJ,
-  checkExistingCEP,
-} from "../services/brasilApiService.mjs";
+import { checkExistingCEP } from "../services/checkExistingCEP.mjs";
+import { CNPJcheckExisting } from "../services/CNPJcheckExisting.mjs";
 import Ong from "../models/ONG.mjs";
 import type { CreateONGReceived } from "../types/CreateOng.mjs";
+import type { Coordinates } from "../types/checkExist.mjs";
 import { cnpj } from "cpf-cnpj-validator";
 const cnpjLibrary = cnpj;
 
@@ -21,11 +20,20 @@ export const validateCreationOng = async (
       return;
     }
 
-    const resultExistCNPJ = await checkExistingCNPJ(data.cnpj);
+    const resultExistCNPJ = await CNPJcheckExisting(data.cnpj);
     if (!resultExistCNPJ.exists) {
       res
         .status(400)
         .json({ message: "CNPJ não encontrado na Receita Federal" });
+      return;
+    }
+
+    const situacaoCadastral = resultExistCNPJ.data.descricao_situacao_cadastral;
+
+    if (!situacaoCadastral || situacaoCadastral.toUpperCase() !== "ATIVA") {
+      res.status(400).json({
+        message: `O CNPJ informado possui situação cadastral '${situacaoCadastral || "INVÁLIDA"}' na Receita Federal e não pode ser cadastrado.`,
+      });
       return;
     }
 
@@ -69,9 +77,11 @@ export const validateCreationOng = async (
       return;
     }
 
-    
-    res.locals.coordinates = { lat: valCEP.lat, lng: valCEP.lng };
-    
+    res.locals.coordinates = {
+      lat: valCEP.lat,
+      lng: valCEP.lng,
+    } as Coordinates;
+
     next();
   } catch (error: unknown) {
     const message =
