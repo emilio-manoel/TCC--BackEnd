@@ -1,11 +1,10 @@
 import express from "express";
 import { getUf, getNearbyOngs } from "../controllers/donorController.mjs";
-import { extrairDadosDoacao } from "../services/LocatorGeminiService.mjs";
+import { extractDonorData } from "../services/extractDonorData.mjs";
 
 const donorRoute = express.Router();
 
 donorRoute.get("/uf/:uf", getUf);
-donorRoute.post("/nearby", extrairDadosDoacao, getNearbyOngs);
-donorRoute.get("/nearby", getNearbyOngs);
+donorRoute.post("/nearby", extractDonorData, getNearbyOngs);
 
 export default donorRoute;

@@ -73,8 +73,8 @@ export async function checkExistingCEP(
         }
 
         if (!lat || !lng) {
-          const citySearch = resultCep.data.city || cidade;
-          const stateSearch = resultCep.data.state || uf;
+          const citySearch = resultCep.data.city 
+          const stateSearch = resultCep.data.state
 
           if (citySearch && stateSearch) {
             const mapRes = await openStreetMap(citySearch, stateSearch);
@@ -85,20 +85,25 @@ export async function checkExistingCEP(
           }
         }
 
+        if(lat !== undefined && lng !== undefined){
         return {
           exists: true,
           lat,
           lng,
         };
       }
+      }
     }
   }
 
   if (cidade && uf) {
     if (povoado) {
+
       const specificResult = await openStreetMap(cidade, uf, povoado);
+
       if (specificResult.exists && specificResult.data.length > 0) {
         const item = specificResult.data[0];
+        
         return {
           exists: true,
           lat: parseFloat(item.lat),

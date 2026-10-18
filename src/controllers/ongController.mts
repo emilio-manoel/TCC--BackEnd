@@ -1,7 +1,7 @@
 import Ong from "../models/ONG.mjs";
 import Necessidade from "../models/Necessidade.mjs";
 import { Request, Response } from "express";
-import type { CreateONGSent, NecessidadeType } from "../types/CreateOng.mjs";
+import type { CreateONGSent, NecessidadeType } from "../types/createOng.mjs";
 import type { Coordinates } from "../types/checkExist.mjs";
 import { cnpj } from "cpf-cnpj-validator";
 const cnpjLibrary = cnpj;
@@ -18,7 +18,7 @@ export const createOng = async (req: Request, res: Response): Promise<void> => {
     const newOng = new Ong(data);
     await newOng.save();
 
-    const listNecessidades = data.necessidade
+    const listNecessidades = data.necessidade;
     if (listNecessidades && Array.isArray(listNecessidades)) {
       const necessidadesDocs = listNecessidades
         .filter(

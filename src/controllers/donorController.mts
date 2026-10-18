@@ -20,21 +20,14 @@ export const getUf = async (req: Request<{ uf: string }>, res: Response) => {
 };
 
 export const getNearbyOngs = async (
-  req: Request,
+  _req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const lat = req.query.lat
-      ? parseFloat(req.query.lat as string)
-      : res.locals.lat;
+    const lat = res.locals.lat;
+    const lng = res.locals.lng;
 
-    const lng = req.query.lng
-      ? parseFloat(req.query.lng as string)
-      : res.locals.lng;
-
-    const distance = req.query.distance
-      ? parseInt(req.query.distance as string)
-      : 25000;
+    const distance = 25000;
 
     if (!lat || !lng) {
       res
