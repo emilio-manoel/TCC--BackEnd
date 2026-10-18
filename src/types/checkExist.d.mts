@@ -1,4 +1,4 @@
-import type { CreateONGReceived } from "./createOng.d.mts";
+import type { CreateONGReceived } from "./ongCreate.d.mts";
 
 export interface BrasilApiCNPJResponse {
   codigo_natureza_juridica: number;

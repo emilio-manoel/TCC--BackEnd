@@ -1,7 +1,7 @@
 import Ong from "../models/ONG.mjs";
 import Necessidade from "../models/Necessidade.mjs";
 import { Request, Response } from "express";
-import type { CreateONGSent, NecessidadeType } from "../types/createOng.mjs";
+import type { CreateONGSent, NecessidadeType } from "../types/ongCreate.mjs";
 import type { Coordinates } from "../types/checkExist.mjs";
 import { cnpj } from "cpf-cnpj-validator";
 const cnpjLibrary = cnpj;

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { checkExistingCEP } from "../services/checkExistingCEP.mjs";
 import { CNPJcheckExisting } from "../services/CNPJcheckExisting.mjs";
 import Ong from "../models/ONG.mjs";
-import type { CreateONGReceived } from "../types/createOng.mjs";
+import type { CreateONGReceived } from "../types/ongCreate.mjs";
 import type { Coordinates } from "../types/checkExist.mjs";
 import { cnpj } from "cpf-cnpj-validator";
 const cnpjLibrary = cnpj;
