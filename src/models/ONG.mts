@@ -1,4 +1,5 @@
 import { Schema, model, Document } from "mongoose";
+import { INecessidade } from "./Necessidade.mjs";
 
 export interface IONG extends Document {
   cnpj: string;
@@ -18,6 +19,7 @@ export interface IONG extends Document {
     type: "Point";
     coordinates: [number, number];
   };
+  virtualNecessidade?:INecessidade[]
 }
 
 const ongSchema = new Schema<IONG>({
@@ -90,7 +92,7 @@ const ongSchema = new Schema<IONG>({
 
 ongSchema.index({ localizacao: "2dsphere" });
 
-ongSchema.virtual('necessidades', {
+ongSchema.virtual('virtualNecessidade', {
   ref: 'Necessidade',
   localField: '_id',
   foreignField: 'ong'

@@ -12,7 +12,7 @@ export async function CNPJcheckExisting(
   if (!cnpjClean) return { exists: false };
 
   try {
-    const resposta = await fetch(
+    const response = await fetch(
       `https://brasilapi.com.br/api/cnpj/v1/${cnpjClean}`,
       {
         headers: {
@@ -21,10 +21,10 @@ export async function CNPJcheckExisting(
       },
     );
 
-    if (!resposta.ok) return { exists: false };
+    if (!response.ok) return { exists: false };
 
-    const data = (await resposta.json()) as BrasilApiCNPJResponse;
-    
+    const data = (await response.json()) as BrasilApiCNPJResponse;
+
     return { exists: true, data };
   } catch {
     return { exists: false };

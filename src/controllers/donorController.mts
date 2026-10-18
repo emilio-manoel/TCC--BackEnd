@@ -1,6 +1,7 @@
 import Ong from "../models/ONG.mjs";
 import { Request, Response } from "express";
 import { generateResponseMatch } from "../services/responseMatchService.mjs";
+import type { ChatMessageInput } from "../types/extractionData.mjs";
 import { Coordinates } from "../types/checkExist.mjs";
 
 export const getUf = async (req: Request<{ uf: string }>, res: Response) => {
@@ -11,7 +12,7 @@ export const getUf = async (req: Request<{ uf: string }>, res: Response) => {
       status_aprovacao: "aprovado",
     })
       .limit(15)
-      .populate("necessidades");
+      .populate("virtualNecessidade");
     res.status(200).json({ ongs });
   } catch (error: unknown) {
     const message =
@@ -21,11 +22,16 @@ export const getUf = async (req: Request<{ uf: string }>, res: Response) => {
 };
 
 export const getNearbyOngs = async (
-  _req: Request,
+  req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const { lat, lng } = res.locals.coordinates as Coordinates;
+    const history: ChatMessageInput[] = Array.isArray(req.body)
+      ? req.body
+      : Array.isArray(req.body?.history)
+        ? req.body.history
+        : [];
     const distance = 25000;
 
     const ongs = await Ong.find({
@@ -41,10 +47,30 @@ export const getNearbyOngs = async (
       },
     })
       .limit(15)
-      .populate("necessidades");
+      .populate("virtualNecessidade");
+
+    const recentHistory = history
+      .filter((m) => m?.content && m.content.trim().length > 0)
+      .slice(-6);
+
+    const historyFormatted = recentHistory
+      .map((m) => {
+        let content = m.content.trim();
+
+        if (content.length > 600) {
+          content = content.slice(0, 600) + "...";
+        }
+
+        const label = m.sender === "user" ? "Usuário" : "Assistente";
+        return `${label}: ${content}`;
+      })
+      .join("\n");
 
     const extractedData = res.locals.extractedData;
-    const responseMatch = await generateResponseMatch(extractedData, ongs);
+    const responseMatch =
+      extractedData && ongs
+        ? await generateResponseMatch(extractedData, ongs, historyFormatted)
+        : undefined;
 
     const ongsFormatted = ongs.map((ong) => {
       const [longitude, latitude] = ong.localizacao.coordinates;

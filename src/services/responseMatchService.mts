@@ -1,23 +1,24 @@
 import { geminiClient } from "../config/gemini.mjs";
-import { GENERAL_RESPONSE } from "../prompts/generalResponse.mjs";
+import { IONG } from "../models/ONG.mjs";
+import {
+  GENERAL_RESPONSE,
+  matchResponseSchema,
+} from "../prompts/generalResponse.mjs";
+import type { ExtractionCompleto } from "../types/extractionData.mjs";
 
-export interface ResponseMatch {
+interface ResponseMatch {
   success: boolean;
   messageChat: string;
-  ongSelected?: {
-    id?: string;
-    nome?: string;
-    endereco_completo?: string;
-  };
 }
 
 export const generateResponseMatch = async (
-  extractedData: any,
-  ongs: any[],
+  extractedData: ExtractionCompleto,
+  ongs: IONG[],
+  historyFormatted: string,
 ): Promise<ResponseMatch> => {
   try {
     const inputContent = JSON.stringify({
-      extractedData,
+      extractedData: extractedData,
       ongs: ongs.map((ong) => ({
         id: ong._id,
         razao_social: ong.razao_social,
@@ -26,32 +27,42 @@ export const generateResponseMatch = async (
         endereco_completo: ong.endereco_completo,
         municipio: ong.municipio,
         uf: ong.uf,
-        necessidades: ong.necessidades,
+        necessidade: ong.virtualNecessidade,
         localizacao: ong.localizacao,
       })),
     });
 
-    const resposta = await geminiClient.models.generateContent({
+    const promptFinal = `
+    HISTÓRICO RECENTE DA CONVERSA (use para não repetir):
+
+    ${historyFormatted || "(primeira interação - sem histórico)"}
+
+    DADOS ATUAIS PARA PROCESSAMENTO:
+    ${inputContent}
+`;
+
+    const response = await geminiClient.models.generateContent({
       model: "gemini-3.5-flash-lite",
       contents: [
         {
           role: "user",
-          parts: [{ text: inputContent }],
+          parts: [{ text: promptFinal }],
         },
       ],
       config: {
         systemInstruction: GENERAL_RESPONSE,
         responseMimeType: "application/json",
-        temperature: 0.2,
+        responseSchema: matchResponseSchema,
+        temperature: 0.3,
       },
     });
 
-    const textoResposta = resposta.text;
-    if (!textoResposta) {
+    const textResponse = response.text;
+    if (!textResponse) {
       throw new Error("Resposta do Match de IA veio vazia.");
     }
 
-    return JSON.parse(textoResposta);
+    return JSON.parse(textResponse);
   } catch (error) {
     console.error("Erro ao gerar resposta de Match com Gemini:", error);
     return {

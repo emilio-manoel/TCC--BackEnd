@@ -5,16 +5,13 @@ import {
   LocationCheckResult,
 } from "../types/checkExist.mjs";
 
-
 async function apiBrasilCep(
   cep: string,
 ): Promise<ValidationResult<BrasilApiCepV2Response>> {
   try {
     if (cep) return { exists: false };
 
-    const response = await fetch(
-      `https://brasilapi.com.br/api/cep/v2/${cep}`,
-    );
+    const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
     if (!response.ok) return { exists: false };
 
     const data = (await response.json()) as BrasilApiCepV2Response;
@@ -37,15 +34,15 @@ async function openStreetMap(
   const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`;
 
   try {
-    const resposta = await fetch(url, {
+    const response = await fetch(url, {
       headers: {
         "User-Agent": "TCC-App-Validation",
       },
     });
 
-    if (!resposta.ok) return { exists: false };
+    if (!response.ok) return { exists: false };
 
-    const data = (await resposta.json()) as NominatimSearchResult[];
+    const data = (await response.json()) as NominatimSearchResult[];
     return { exists: true, data };
   } catch {
     return { exists: false };
@@ -73,8 +70,8 @@ export async function checkExistingCEP(
         }
 
         if (!lat || !lng) {
-          const citySearch = resultCep.data.city 
-          const stateSearch = resultCep.data.state
+          const citySearch = resultCep.data.city;
+          const stateSearch = resultCep.data.state;
 
           if (citySearch && stateSearch) {
             const mapRes = await openStreetMap(citySearch, stateSearch);
@@ -85,25 +82,24 @@ export async function checkExistingCEP(
           }
         }
 
-        if(lat !== undefined && lng !== undefined){
-        return {
-          exists: true,
-          lat,
-          lng,
-        };
-      }
+        if (lat !== undefined && lng !== undefined) {
+          return {
+            exists: true,
+            lat,
+            lng,
+          };
+        }
       }
     }
   }
 
   if (cidade && uf) {
     if (povoado) {
-
       const specificResult = await openStreetMap(cidade, uf, povoado);
 
       if (specificResult.exists && specificResult.data.length > 0) {
         const item = specificResult.data[0];
-        
+
         return {
           exists: true,
           lat: parseFloat(item.lat),
