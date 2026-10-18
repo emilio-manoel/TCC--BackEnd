@@ -1,5 +1,5 @@
 import { geminiClient } from "../config/gemini.mjs";
-import { RESPOSTA_GERAL } from "../prompts/respostaGeral.mjs";
+import { GENERAL_RESPONSE } from "../prompts/generalResponse.mjs";
 
 export interface ResponseMatch {
   success: boolean;
@@ -11,13 +11,13 @@ export interface ResponseMatch {
   };
 }
 
-export const gerarRespostaMatch = async (
-  dadosExtraidos: any,
+export const generateResponseMatch = async (
+  extractedData: any,
   ongs: any[],
 ): Promise<ResponseMatch> => {
   try {
     const inputContent = JSON.stringify({
-      dadosExtraidos,
+      extractedData,
       ongs: ongs.map((ong) => ({
         id: ong._id,
         razao_social: ong.razao_social,
@@ -40,7 +40,7 @@ export const gerarRespostaMatch = async (
         },
       ],
       config: {
-        systemInstruction: RESPOSTA_GERAL,
+        systemInstruction: GENERAL_RESPONSE,
         responseMimeType: "application/json",
         temperature: 0.2,
       },

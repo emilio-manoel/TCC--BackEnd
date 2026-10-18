@@ -1,12 +1,11 @@
 import { Coordinates } from "../types/checkExist.mjs";
+import { ExtractionCompleto, ItemDonor } from "../types/extractionData.mjs";
 
 declare global {
   namespace Express {
     interface Locals {
-      coordinates?: {
-        lat: number;
-        lng: number;
-      };
+      coordinates?: Coordinates
+      extractedData?: ExtractionCompleto
     }
   }
 }

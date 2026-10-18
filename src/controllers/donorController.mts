@@ -1,6 +1,7 @@
 import Ong from "../models/ONG.mjs";
 import { Request, Response } from "express";
-import { gerarRespostaMatch } from "../services/responseMatchService.mjs";
+import { generateResponseMatch } from "../services/responseMatchService.mjs";
+import { Coordinates } from "../types/checkExist.mjs";
 
 export const getUf = async (req: Request<{ uf: string }>, res: Response) => {
   try {
@@ -24,17 +25,8 @@ export const getNearbyOngs = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const lat = res.locals.lat;
-    const lng = res.locals.lng;
-
+    const { lat, lng } = res.locals.coordinates as Coordinates;
     const distance = 25000;
-
-    if (!lat || !lng) {
-      res
-        .status(400)
-        .json({ message: "Latitude e longitude são obrigatórios" });
-      return;
-    }
 
     const ongs = await Ong.find({
       status_aprovacao: "aprovado",
@@ -51,15 +43,10 @@ export const getNearbyOngs = async (
       .limit(15)
       .populate("necessidades");
 
-    const dadosExtraidos = res.locals.dadosExtraidos;
+    const extractedData = res.locals.extractedData;
+    const responseMatch = await generateResponseMatch(extractedData, ongs);
 
-    // Executa a IA para gerar a resposta empática/match
-    const responseMatch = dadosExtraidos
-      ? await gerarRespostaMatch(dadosExtraidos, ongs)
-      : undefined;
-
-  
-    const ongsFormatadas = ongs.map((ong) => {
+    const ongsFormatted = ongs.map((ong) => {
       const [longitude, latitude] = ong.localizacao.coordinates;
 
       return {
@@ -73,9 +60,9 @@ export const getNearbyOngs = async (
 
     res.status(200).json({
       status: "completo",
-      coordenadasUsuario: { lat, lng },
+      userCoordinates: { lat, lng },
       responseMatch,
-      ongs: ongsFormatadas,
+      ongs: ongsFormatted,
     });
   } catch (error: unknown) {
     const message =

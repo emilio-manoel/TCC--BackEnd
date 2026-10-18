@@ -1,7 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { geminiClient } from "../config/gemini.mjs";
-import { PROMPT_EXTRACAO } from "../prompts/obterLocal.mjs";
+import { PROMPT_EXTRACTION } from "../prompts/getLocation.mjs";
 import { checkExistingCEP } from "./checkExistingCEP.mjs";
+import type {
+  ChatMessageInput,
+  ExtractionResult,
+} from "../types/extractionData.mjs";
+import { extractionResponseSchema } from "../prompts/getLocation.mjs";
+import { Coordinates } from "../types/checkExist.mjs";
 
 export const extractDonorData = async (
   req: Request,
@@ -9,7 +15,7 @@ export const extractDonorData = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const history: Message[] = Array.isArray(req.body)
+    const history: ChatMessageInput[] = Array.isArray(req.body)
       ? req.body
       : Array.isArray(req.body?.history)
         ? req.body.history
@@ -17,38 +23,39 @@ export const extractDonorData = async (
 
     const response = await geminiClient.models.generateContent({
       model: "gemini-3.5-flash-lite",
-      contents: history.map((m) => ({
-        role: m.sender,
-        parts: [{ text: m.content }],
-      })),
+      contents: history
+        .filter((m) => m.content?.trim())
+        .map((m) => ({
+          role: m.sender === "user" ? "user" : "model",
+          parts: [{ text: m.content }],
+        })),
       config: {
-        systemInstruction: PROMPT_EXTRACAO,
+        systemInstruction: PROMPT_EXTRACTION,
+        responseSchema: extractionResponseSchema,
         responseMimeType: "application/json",
         temperature: 0,
       },
     });
 
     const textResponse = response.text;
-
     if (!textResponse) {
       throw new Error("Resposta da IA veio vazia.");
     }
+    const extractedData: ExtractionResult = JSON.parse(textResponse);
 
-    const dadosExtraidos: ExtractionResult = JSON.parse(textResponse);
-
-    if (dadosExtraidos.status === "incompleto") {
-      res.status(200).json(dadosExtraidos);
+    if (extractedData.status === "incompleto") {
+      res.status(200).json(extractedData);
       return;
     }
 
-    const resultadoLocal = await checkExistingCEP(
-      dadosExtraidos.cep,
-      dadosExtraidos.cidade,
-      dadosExtraidos.uf,
-      dadosExtraidos.povoado,
+    const localResult = await checkExistingCEP(
+      extractedData.cep,
+      extractedData.cidade,
+      extractedData.uf,
+      extractedData.povoado,
     );
 
-    if (!resultadoLocal.exists) {
+    if (!localResult.exists) {
       res.status(200).json({
         status: "incompleto",
         question:
@@ -57,11 +64,12 @@ export const extractDonorData = async (
       return;
     }
 
-    // Guarda os dados extraídos e as coordenadas para a próxima rota (getNearbyOngs)
-    res.locals.dadosExtraidos = dadosExtraidos;
-    res.locals.lat = resultadoLocal.lat;
-    res.locals.lng = resultadoLocal.lng;
-
+    res.locals.extractedData = extractedData;
+      res.locals.coordinates = {
+      lat: localResult.lat,
+      lng: localResult.lng,
+    } as Coordinates;
+    
     next();
   } catch (error) {
     console.error("Erro no processamento da doação:", error);
@@ -72,24 +80,3 @@ export const extractDonorData = async (
     });
   }
 };
-
-interface Message {
-  sender: "user" | "bot";
-  content: string;
-}
-
-interface DonorItem {
-  descricao: string;
-  quantidade: string | null;
-}
-
-type ExtractionResult =
-  | { status: "incompleto"; question: string }
-  | {
-      status: "completo";
-      cep: string | null;
-      cidade: string | null;
-      uf: string | null;
-      povoado: string | null;
-      itens: DonorItem[];
-    };
