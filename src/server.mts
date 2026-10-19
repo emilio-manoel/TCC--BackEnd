@@ -6,7 +6,7 @@ import ongRoute from "./routes/ongRoutes.mjs";
 import adminRoute from "./routes/adminRoutes.mjs";
 import donorRoute from "./routes/donorRoutes.mjs";
 import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from "./utils/swagger.js";
+import { swaggerSpec } from "./utils/swagger.mjs";
 
 const app = express();
 

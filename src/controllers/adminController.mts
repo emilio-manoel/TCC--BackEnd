@@ -16,23 +16,31 @@ export const getPendingOngs = async (_req: Request, res: Response) => {
   }
 };
 
+// ---------------------------------------------------
+
+type StatusAprovacao = "pendente" | "aprovado" | "rejeitado";
+interface UpdateStatusRequestBody {
+  status_aprovacao: StatusAprovacao;
+}
+
 export const updateOngStatus = async (
-  req: Request<{ id: string }>,
+  req: Request<{ id: string }, {}, UpdateStatusRequestBody>,
   res: Response,
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const { status_aprovacao } = req.body;
 
-    if (!["aprovado", "rejeitado", "pendente"].includes(status_aprovacao)) {
+    const STATUS_VALIDOS = ["aprovado", "rejeitado", "pendente"] as const;
+    if (!STATUS_VALIDOS.includes(status_aprovacao as StatusAprovacao)) {
       res.status(400).json({ message: "Status inválido" });
       return;
     }
 
     const ong = await Ong.findByIdAndUpdate(
       id,
-      { status_aprovacao },
-      { returnDocument: "after" },
+      { $set: { status_aprovacao } },
+      { returnDocument: "after", runValidators: true },
     ).populate("virtualNecessidade");
 
     if (!ong) {
@@ -40,15 +48,15 @@ export const updateOngStatus = async (
       return;
     }
 
-    // Atualiza o status das necessidades associadas
-    await Necessidade.updateMany({ ong: ong._id }, { status_aprovacao });
+    await Necessidade.updateMany(
+      { ong: ong._id },
+      { $set: { status_aprovacao } },
+    );
 
-    res
-      .status(200)
-      .json({
-        message: `ONG e suas necessidades atualizadas para status: ${status_aprovacao}`,
-        ong,
-      });
+    res.status(200).json({
+      message: `ONG e suas necessidades atualizadas para status: ${status_aprovacao}`,
+      ong,
+    });
   } catch (error: unknown) {
     const message =
       error instanceof Error
@@ -58,13 +66,14 @@ export const updateOngStatus = async (
   }
 };
 
+// ---------------------------------------------------
+
 export const deleteRejectedOngs = async (
   _req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const rejectedOngs = await Ong.find({ status_aprovacao: "rejeitado" });
-    const ongsIds = rejectedOngs.map((ong) => ong._id);
+     const ongsIds = await Ong.distinct("_id", { status_aprovacao: "rejeitado" });
 
     if (ongsIds.length === 0) {
       res
@@ -73,14 +82,13 @@ export const deleteRejectedOngs = async (
       return;
     }
 
-    // Apaga as necessidades associadas às ONGs rejeitadas
-    await Necessidade.deleteMany({ ong: { $in: ongsIds } });
+    const resultNecessidade =  await Necessidade.deleteMany({ ong: { $in: ongsIds } });
+    
+    const result = await Ong.deleteMany({ _id: { $in: ongsIds } });
 
-    // Apaga as ONGs
-    const result = await Ong.deleteMany({ status_aprovacao: "rejeitado" });
 
     res.status(200).json({
-      message: `${result.deletedCount} ONG(s) rejeitada(s) e suas necessidades foram excluídas com sucesso.`,
+      message: `${result.deletedCount} ONG(s) rejeitada(s) e ${resultNecessidade.deletedCount} necessidades foram excluídas com sucesso.`,
     });
   } catch (error: unknown) {
     const message =
@@ -91,12 +99,17 @@ export const deleteRejectedOngs = async (
   }
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || "chave_fallback_secreta";
+// -----------------------------------------------
 
-export async function loginAdmin(req: Request, res: Response) {
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET não definida no ambiente");
+  return secret;
+}
+
+export async function loginAdmin(req: Request<{}, {},{email:string, senha:string}>, res: Response) {
   const { email, senha } = req.body;
 
-  // Validação simples (pode comparar com o banco ou com o .env)
   const adminEmail = process.env.ADMIN_USER;
   const adminSenha = process.env.ADMIN_PASS;
 
@@ -104,8 +117,7 @@ export async function loginAdmin(req: Request, res: Response) {
     return res.status(401).json({ error: "E-mail ou senha incorretos" });
   }
 
-  // Gera o token válido por 1 dia (24h)
-  const token = jwt.sign({ email, role: "admin" }, JWT_SECRET, {
+  const token = jwt.sign({ email, role: "admin" }, getJwtSecret(), {
     expiresIn: "1d",
   });
 
