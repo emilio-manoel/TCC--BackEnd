@@ -1,6 +1,6 @@
 {
   "name": "TCC--BackEnd",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "server.mts",
   "license": "MIT",
   "type": "module",

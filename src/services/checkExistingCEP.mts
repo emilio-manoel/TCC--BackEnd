@@ -1,4 +1,4 @@
-import {
+import type {
   BrasilApiCepV2Response,
   NominatimSearchResult,
   ValidationResult,
@@ -9,7 +9,7 @@ async function apiBrasilCep(
   cep: string,
 ): Promise<ValidationResult<BrasilApiCepV2Response>> {
   try {
-    if (cep) return { exists: false };
+    if (!cep) return { exists: false };
 
     const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
     if (!response.ok) return { exists: false };
@@ -65,24 +65,41 @@ export async function checkExistingCEP(
         let lng: number | undefined;
 
         if (resultCep.data.location?.coordinates) {
-          lng = parseFloat(resultCep.data.location.coordinates.longitude);
-          lat = parseFloat(resultCep.data.location.coordinates.latitude);
+          const rawLng = parseFloat(
+            resultCep.data.location.coordinates.longitude,
+          );
+          const rawLat = parseFloat(
+            resultCep.data.location.coordinates.latitude,
+          );
+          if (Number.isFinite(rawLat) && Number.isFinite(rawLng)) {
+            lat = rawLat;
+            lng = rawLng;
+          }
         }
 
-        if (!lat || !lng) {
+        if (lat === undefined || lng === undefined) {
           const citySearch = resultCep.data.city;
           const stateSearch = resultCep.data.state;
 
           if (citySearch && stateSearch) {
+
             const mapRes = await openStreetMap(citySearch, stateSearch);
+
             if (mapRes.exists && mapRes.data.length > 0) {
-              lat = parseFloat(mapRes.data[0].lat);
-              lng = parseFloat(mapRes.data[0].lon);
+
+              const rawLat = parseFloat(mapRes.data[0].lat);
+
+              const rawLng = parseFloat(mapRes.data[0].lon);
+              
+              if (Number.isFinite(rawLat) && Number.isFinite(rawLng)) {
+                lat = rawLat;
+                lng = rawLng;
+              }
             }
           }
         }
 
-        if (lat !== undefined && lng !== undefined) {
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
           return {
             exists: true,
             lat,
@@ -99,23 +116,32 @@ export async function checkExistingCEP(
 
       if (specificResult.exists && specificResult.data.length > 0) {
         const item = specificResult.data[0];
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lon);
 
-        return {
-          exists: true,
-          lat: parseFloat(item.lat),
-          lng: parseFloat(item.lon),
-        };
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          return {
+            exists: true,
+            lat,
+            lng,
+          };
+        }
       }
     }
 
     const resultMap = await openStreetMap(cidade, uf);
     if (resultMap.exists && resultMap.data.length > 0) {
       const item = resultMap.data[0];
-      return {
-        exists: true,
-        lat: parseFloat(item.lat),
-        lng: parseFloat(item.lon),
-      };
+      const lat = parseFloat(item.lat);
+      const lng = parseFloat(item.lon);
+
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return {
+          exists: true,
+          lat,
+          lng,
+        };
+      }
     }
   }
 
