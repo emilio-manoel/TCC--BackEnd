@@ -22,7 +22,7 @@ export const extractDonorData = async (
         : [];
 
     const response = await geminiClient.models.generateContent({
-      model: "gemini-3.5-flash-lite",
+      model: "gemini-3.1-flash-lite",
       contents: history
         .filter((m) => m.content?.trim())
         .map((m) => ({
