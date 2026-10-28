@@ -9,7 +9,13 @@ export async function CNPJcheckExisting(
 ): Promise<ValidationResult<BrasilApiCNPJResponse>> {
   const cnpjClean = cnpj.strip(Cnpj);
 
-  if (!cnpjClean) return { exists: false };
+  if (!cnpjClean) {
+    return {
+      exists: false,
+      status: "not_found",
+      message: "CNPJ inválido ou não fornecido",
+    };
+  }
 
   try {
     const response = await fetch(
@@ -18,15 +24,36 @@ export async function CNPJcheckExisting(
         headers: {
           "User-Agent": "TCC-App-Validation",
         },
+        signal: AbortSignal.timeout(7000),
       },
     );
 
-    if (!response.ok) return { exists: false };
+    if (response.ok) {
+      const data = (await response.json()) as BrasilApiCNPJResponse;
+      return { exists: true, data, status: "success" };
+    }
 
-    const data = (await response.json()) as BrasilApiCNPJResponse;
+    if (response.status === 404 || response.status === 400) {
+      return {
+        exists: false,
+        status: "not_found",
+        message: "CNPJ não encontrado na Receita Federal",
+      };
+    }
 
-    return { exists: true, data };
+    // Erros 429, 500, 502, 503, 504 indicam indisponibilidade da BrasilAPI
+    return {
+      exists: false,
+      status: "unavailable",
+      message:
+        "O serviço de consulta de CNPJ (Brasil API) está temporariamente indisponível. Por favor, tente novamente mais tarde.",
+    };
   } catch {
-    return { exists: false };
+    return {
+      exists: false,
+      status: "unavailable",
+      message:
+        "O serviço de consulta de CNPJ (Brasil API) está temporariamente indisponível. Por favor, tente novamente mais tarde.",
+    };
   }
 }

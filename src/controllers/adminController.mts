@@ -2,14 +2,28 @@ import Ong from "../models/ONG.mjs";
 import Necessidade from "../models/Necessidade.mjs";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import {
+  isMongoConnected,
+  isMongoError,
+  MONGO_UNAVAILABLE_MESSAGE,
+} from "../middlewares/mongoError.mjs";
 
 export const getPendingOngs = async (_req: Request, res: Response) => {
   try {
+    if (!isMongoConnected()) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
+
     const ongs = await Ong.find({ status_aprovacao: "pendente" }).populate(
       "virtualNecessidade",
     );
     res.status(200).json({ ongs });
   } catch (error: unknown) {
+    if (isMongoError(error)) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
     const message =
       error instanceof Error ? error.message : "Erro ao buscar ONGs pendentes";
     res.status(500).json({ message });
@@ -28,6 +42,11 @@ export const updateOngStatus = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (!isMongoConnected()) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
+
     const { id } = req.params;
     const { status_aprovacao } = req.body;
 
@@ -58,6 +77,10 @@ export const updateOngStatus = async (
       ong,
     });
   } catch (error: unknown) {
+    if (isMongoError(error)) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
     const message =
       error instanceof Error
         ? error.message
@@ -73,7 +96,14 @@ export const deleteRejectedOngs = async (
   res: Response,
 ): Promise<void> => {
   try {
-     const ongsIds = await Ong.distinct("_id", { status_aprovacao: "rejeitado" });
+    if (!isMongoConnected()) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
+
+    const ongsIds = await Ong.distinct("_id", {
+      status_aprovacao: "rejeitado",
+    });
 
     if (ongsIds.length === 0) {
       res
@@ -82,15 +112,19 @@ export const deleteRejectedOngs = async (
       return;
     }
 
-    const resultNecessidade =  await Necessidade.deleteMany({ ong: { $in: ongsIds } });
-    
+    const resultNecessidade = await Necessidade.deleteMany({
+      ong: { $in: ongsIds },
+    });
     const result = await Ong.deleteMany({ _id: { $in: ongsIds } });
-
 
     res.status(200).json({
       message: `${result.deletedCount} ONG(s) rejeitada(s) e ${resultNecessidade.deletedCount} necessidades foram excluídas com sucesso.`,
     });
   } catch (error: unknown) {
+    if (isMongoError(error)) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
     const message =
       error instanceof Error
         ? error.message
@@ -107,7 +141,10 @@ function getJwtSecret(): string {
   return secret;
 }
 
-export async function loginAdmin(req: Request<{}, {},{email:string, senha:string}>, res: Response) {
+export async function loginAdmin(
+  req: Request<{}, {}, { email: string; senha: string }>,
+  res: Response,
+) {
   const { email, senha } = req.body;
 
   const adminEmail = process.env.ADMIN_USER;

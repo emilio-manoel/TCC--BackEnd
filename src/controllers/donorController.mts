@@ -3,9 +3,19 @@ import { Request, Response } from "express";
 import { generateResponseMatch } from "../services/responseMatchService.mjs";
 import type { ChatMessageInput } from "../types/extractionData.mjs";
 import { Coordinates } from "../types/checkExist.mjs";
+import {
+  isMongoConnected,
+  isMongoError,
+  MONGO_UNAVAILABLE_MESSAGE,
+} from "../middlewares/mongoError.mjs";
 
 export const getUf = async (req: Request<{ uf: string }>, res: Response) => {
   try {
+    if (!isMongoConnected()) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
+
     const { uf } = req.params;
     const ongs = await Ong.find({
       uf: String(uf),
@@ -15,6 +25,10 @@ export const getUf = async (req: Request<{ uf: string }>, res: Response) => {
       .populate("virtualNecessidade");
     res.status(200).json({ ongs });
   } catch (error: unknown) {
+    if (isMongoError(error)) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
     const message =
       error instanceof Error ? error.message : "Erro desconhecido";
     res.status(500).json({ message });
@@ -26,6 +40,14 @@ export const getNearbyOngs = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (!isMongoConnected()) {
+      res.status(503).json({
+        message: MONGO_UNAVAILABLE_MESSAGE,
+        question: MONGO_UNAVAILABLE_MESSAGE,
+      });
+      return;
+    }
+
     const { lat, lng } = res.locals.coordinates as Coordinates;
     const history: ChatMessageInput[] = Array.isArray(req.body)
       ? req.body
@@ -91,6 +113,13 @@ export const getNearbyOngs = async (
       ongs: ongsFormatted,
     });
   } catch (error: unknown) {
+    if (isMongoError(error)) {
+      res.status(503).json({
+        message: MONGO_UNAVAILABLE_MESSAGE,
+        question: MONGO_UNAVAILABLE_MESSAGE,
+      });
+      return;
+    }
     const message =
       error instanceof Error ? error.message : "Erro ao buscar ONGs próximas";
     res.status(500).json({ message });

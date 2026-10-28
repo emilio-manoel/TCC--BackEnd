@@ -5,6 +5,12 @@ import Ong from "../models/ONG.mjs";
 import type { CreateONGReceived } from "../types/ongCreate.mjs";
 import type { Coordinates } from "../types/checkExist.mjs";
 import { cnpj } from "cpf-cnpj-validator";
+import {
+  isMongoConnected,
+  isMongoError,
+  MONGO_UNAVAILABLE_MESSAGE,
+} from "./mongoError.mjs";
+
 const cnpjLibrary = cnpj;
 
 export const validateCreationOng = async (
@@ -22,6 +28,14 @@ export const validateCreationOng = async (
 
     const resultExistCNPJ = await CNPJcheckExisting(data.cnpj);
     if (!resultExistCNPJ.exists) {
+      if (resultExistCNPJ.status === "unavailable") {
+        res.status(503).json({
+          message:
+            resultExistCNPJ.message ||
+            "O serviço de consulta de CNPJ (Brasil API) está temporariamente indisponível. Por favor, tente novamente mais tarde.",
+        });
+        return;
+      }
       res
         .status(400)
         .json({ message: "CNPJ não encontrado na Receita Federal" });
@@ -62,10 +76,25 @@ export const validateCreationOng = async (
 
     const valCEP = await checkExistingCEP(data.cep, data.municipio, data.uf);
     if (!valCEP.exists) {
+      if (valCEP.errorType === "SERVICES_UNAVAILABLE") {
+        res.status(503).json({
+          message:
+            valCEP.message ||
+            "Os serviços de localização estão temporariamente indisponíveis. Por favor, tente novamente mais tarde.",
+        });
+        return;
+      }
+
       res.status(400).json({
         message:
-          "não foi possivel localizar o local pelo cep, estado ou cidade",
+          valCEP.message ||
+          "Não foi possível localizar o endereço pelo CEP, cidade ou estado informados.",
       });
+      return;
+    }
+
+    if (!isMongoConnected()) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
       return;
     }
 
@@ -84,6 +113,10 @@ export const validateCreationOng = async (
 
     next();
   } catch (error: unknown) {
+    if (isMongoError(error)) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
     const message =
       error instanceof Error ? error.message : "Erro na validação da ONG";
     res.status(500).json({ message });

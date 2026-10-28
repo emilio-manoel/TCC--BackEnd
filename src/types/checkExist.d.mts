@@ -27,19 +27,33 @@ export interface NominatimSearchResult {
 }
 
 export type ValidationResult<T> =
-  | { exists: true; data: T }
-  | { exists: false; data?: undefined };
+  | { exists: true; data: T; status?: "success" }
+  | {
+      exists: false;
+      data?: undefined;
+      status?: "not_found" | "unavailable";
+      message?: string;
+    };
+
+export type LocationErrorType =
+  | "NOT_FOUND"
+  | "BRASILAPI_UNAVAILABLE_NEED_CITY_STATE"
+  | "OPENSTREETMAP_UNAVAILABLE_NEED_CEP"
+  | "SERVICES_UNAVAILABLE";
 
 export type LocationCheckResult =
   | {
       exists: true;
-      lat?: number;
-      lng?: number;
+      lat: number;
+      lng: number;
+      source?: "brasilapi" | "openstreetmap";
     }
   | {
       exists: false;
       lat?: undefined;
       lng?: undefined;
+      errorType?: LocationErrorType;
+      message?: string;
     };
 
 export interface Coordinates {

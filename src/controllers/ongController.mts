@@ -4,10 +4,21 @@ import { Request, Response } from "express";
 import type { CreateONGSent, NecessidadeType } from "../types/ongCreate.mjs";
 import type { Coordinates } from "../types/checkExist.mjs";
 import { cnpj } from "cpf-cnpj-validator";
+import {
+  isMongoConnected,
+  isMongoError,
+  MONGO_UNAVAILABLE_MESSAGE,
+} from "../middlewares/mongoError.mjs";
+
 const cnpjLibrary = cnpj;
 
 export const createOng = async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!isMongoConnected()) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
+
     const data: CreateONGSent = req.body;
     const { lat, lng } = res.locals.coordinates as Coordinates;
 
@@ -42,6 +53,10 @@ export const createOng = async (req: Request, res: Response): Promise<void> => {
       message: "ONG cadastrada com sucesso. Aguardando aprovação.",
     });
   } catch (error: unknown) {
+    if (isMongoError(error)) {
+      res.status(503).json({ message: MONGO_UNAVAILABLE_MESSAGE });
+      return;
+    }
     const message =
       error instanceof Error ? error.message : "Erro ao cadastrar ONG";
     res.status(500).json({ message });
