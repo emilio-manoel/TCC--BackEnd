@@ -8,7 +8,9 @@ if (!dbUri) {
   );
 } else {
   mongoose
-    .connect(dbUri)
+    .connect(dbUri, {
+      autoIndex: true, // Garante que o Mongoose crie os índices definidos nos Schemas
+    })
     .then(() => {
      console.log("e conectado no mongoDB")
     })

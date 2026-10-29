@@ -92,9 +92,21 @@ const ongSchema = new Schema<IONG>({
       required: true,
     },
   },
+  localizacao_original: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number],
+      required: false,
+    },
+  },
 });
 
 ongSchema.index({ localizacao: "2dsphere" });
+ongSchema.index({ localizacao_original: "2dsphere" });
 
 ongSchema.virtual('virtualNecessidade', {
   ref: 'Necessidade',
