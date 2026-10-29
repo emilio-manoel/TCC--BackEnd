@@ -56,20 +56,45 @@ export const getNearbyOngs = async (
         : [];
     const distance = 25000;
 
-    const ongs = await Ong.find({
-      status_aprovacao: "aprovado",
-      localizacao: {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [lng, lat],
+    const [ongsLocalizacao, ongsLocalizacaoOriginal] = await Promise.all([
+      Ong.find({
+        status_aprovacao: "aprovado",
+        localizacao: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [lng, lat],
+            },
+            $maxDistance: distance,
           },
-          $maxDistance: distance,
         },
-      },
-    })
-      .limit(15)
-      .populate("virtualNecessidade");
+      })
+        .limit(15)
+        .populate("virtualNecessidade"),
+
+      Ong.find({
+        status_aprovacao: "aprovado",
+        "localizacao_original.coordinates": {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [lng, lat],
+            },
+            $maxDistance: distance,
+          },
+        },
+      })
+        .limit(15)
+        .populate("virtualNecessidade"),
+    ]);
+
+    const ongUnique = new Map();
+
+    for (const ong of [ ...ongsLocalizacaoOriginal, ...ongsLocalizacao]) {
+      ongUnique.set(ong._id.toString(), ong);
+    }
+
+    const ongs = [...ongUnique.values()].slice(0, 15);
 
     const recentHistory = history
       .filter((m) => m?.content && m.content.trim().length > 0)
@@ -95,7 +120,8 @@ export const getNearbyOngs = async (
         : undefined;
 
     const ongsFormatted = ongs.map((ong) => {
-      const [longitude, latitude] = ong.localizacao.coordinates;
+      const [longitude, latitude] =
+        ong.localizacao_original.coordinates || ong.localizacao.coordinates;
 
       return {
         _id: ong._id,

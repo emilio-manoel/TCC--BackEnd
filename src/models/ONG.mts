@@ -19,6 +19,10 @@ export interface IONG extends Document {
     type: "Point";
     coordinates: [number, number];
   };
+  localizacao_original: {
+    type: "Point";
+    coordinates: [number, number];
+  };
   virtualNecessidade?:INecessidade[]
 }
 
